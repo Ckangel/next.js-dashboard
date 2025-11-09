@@ -32,7 +32,7 @@ export type Revenue = {
 };
 
 export type LatestInvoice = {
-  id: string;
+  id: string;pnpm run dev
   name: string;
   image_url: string;
   email: string;
