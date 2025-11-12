@@ -2,7 +2,7 @@ import clsx from 'clsx';
  
 export default function InvoiceStatus({ status }: { status: string }) {
   return (
-    <span
+    <span>
       className={clsx(
         'inline-flex items-center rounded-full px-2 py-1 text-sm',
         {
@@ -10,6 +10,6 @@ export default function InvoiceStatus({ status }: { status: string }) {
           'bg-green-500 text-white': status === 'paid',
         },
       )}
-    >
+    </span>
     // ...
 )}
