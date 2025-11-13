@@ -1,26 +1,42 @@
-// import postgres from 'postgres';
+import postgres from 'postgres';
 
-// const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+import type { NextRequest } from 'next/server'
+ 
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl
+}
 
-// async function listInvoices() {
-// 	const data = await sql`
-//     SELECT invoices.amount, customers.name
-//     FROM invoices
-//     JOIN customers ON invoices.customer_id = customers.id
-//     WHERE invoices.amount = 666;
-//   `;
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
-// 	return data;
-// }
+async function listInvoices() {
+ 	const data = await sql`
+     SELECT invoices.amount, customers.name
+     FROM invoices
+     JOIN customers ON invoices.customer_id = customers.id
+     WHERE invoices.amount = 666;
+   `;
+
+ 	return data;
+} 
 
 export async function GET() {
-  return Response.json({
-    message:
-      'Uncomment this file and remove this line. You can delete this file when you are finished.',
-  });
-  // try {
-  // 	return Response.json(await listInvoices());
-  // } catch (error) {
-  // 	return Response.json({ error }, { status: 500 });
-  // }
+  try {
+    return Response.json(await listInvoices());
+  } catch (error) {
+  }
 }
+
+export async function GET(request: Request) {}
+ 
+export async function HEAD(request: Request) {}
+ 
+export async function POST(request: Request) {}
+ 
+export async function PUT(request: Request) {}
+ 
+export async function DELETE(request: Request) {}
+ 
+export async function PATCH(request: Request) {}
+ 
+// If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and set the appropriate Response `Allow` header depending on the other methods defined in the Route Handler.
+export async function OPTIONS(request: Request) {}
