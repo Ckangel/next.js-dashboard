@@ -29,7 +29,7 @@ export default function InvoicesTable({
 }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     setLoading(true);
     fetchFilteredInvoices(query, currentPage)
