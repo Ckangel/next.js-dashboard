@@ -1,6 +1,7 @@
 // ...
 import { updateInvoice, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
+import { InvoiceForm } from '@/app/types'; // Adjust the import path as needed
  
 export default function EditInvoiceForm({
   invoice,
@@ -10,7 +11,8 @@ export default function EditInvoiceForm({
   customers: CustomerField[];
 }) {
   const initialState: State = { message: null, errors: {} };
-  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  const updateInvoiceWithId = (state: State | undefined, formData: FormData) =>
+    updateInvoice(invoice.id, state ?? initialState, formData);
   const [state, formAction] = useActionState(updateInvoiceWithId, initialState);
  
   return <form action={formAction}>{/* ... */}</form>;
