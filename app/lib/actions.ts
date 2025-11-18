@@ -1,7 +1,7 @@
 'use server';
 
 import { signIn } from '../auth'; // Adjust path if needed
-import { AuthError } from 'next-auth/errors';
+import { AuthError } from 'next-auth';
 import { sql } from '@vercel/postgres';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
