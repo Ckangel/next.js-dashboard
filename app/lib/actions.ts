@@ -1,99 +1,72 @@
 'use server';
- 
-// Update the path below to the correct location of your auth module, e.g.:
-import { signIn } from '../auth';
-// or, if it's in the root 'app' directory:
-// import { signIn } from '../../auth';
-import { AuthError } from 'next-auth';
 
-
+import { signIn } from '../auth'; // Adjust path if needed
+import { AuthError } from 'next-auth/errors';
 import { sql } from '@vercel/postgres';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
-const UpdateInvoice = {
-  safeParse(input: any) {
-    const errors: Record<string, string[]> = {};
-    const customerId = typeof input.customerId === 'string' ? input.customerId : String(input.customerId ?? '');
-    const rawAmount = input.amount;
-    const amount =
-      typeof rawAmount === 'string' && rawAmount !== ''
-        ? Number(rawAmount)
-        : typeof rawAmount === 'number'
-        ? rawAmount
-        : NaN;
-    const status = typeof input.status === 'string' ? input.status : String(input.status ?? '');
-    if (!customerId) errors.customerId = ['CustomerId is required'];
-    if (!Number.isFinite(amount)) errors.amount = ['Amount must be a number'];
-    const allowed = ['draft', 'pending', 'paid'];
-    if (!status || !allowed.includes(String(status).toLowerCase())) errors.status = ['Invalid status'];
-    if (Object.keys(errors).length) {
+import { InvoiceForm, State } from './definitions';
+import { revalidatePath } from 'next/cache';
+
+export async function authenticate(
+  prevState: State,
+  formData: FormData
+): Promise<State> {
+  try {
+    await signIn('credentials', {
+      redirect: false,
+      email: formData.get('email'),
+      password: formData.get('password'),
+    });
+    return { message: 'Success', errors: {} };
+  } catch (error) {
+    if (error instanceof AuthError) {
       return {
-        success: false,
-        error: {
-          flatten() {
-            return { fieldErrors: errors };
-          },
-        },
+        message: 'Authentication failed',
+        errors: { email: 'Invalid credentials' },
       };
     }
-    return { success: true, data: { customerId, amount, status } };
-  },
-};
+    throw error;
+  }
+}
 
-export type State = {
-  errors?: Record<string, string[]>;
-  message?: string;
-};
+const UpdateInvoiceSchema = z.object({
+  customer_id: z.string(),
+  amount: z.coerce.number(),
+  status: z.enum(['pending', 'paid']),
+});
 
 export async function updateInvoice(
   id: string,
   prevState: State,
-  formData: FormData,
-) {
-  const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get('customerId'),
+  formData: FormData
+): Promise<State> {
+  const validated = UpdateInvoiceSchema.safeParse({
+    customer_id: formData.get('customer_id'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
- 
-  if (!validatedFields.success) {
+
+  if (!validated.success) {
     return {
-      errors: validatedFields.error?.flatten().fieldErrors ?? {},
-      message: 'Missing Fields. Failed to Update Invoice.',
+      message: 'Validation failed',
+      errors: validated.error.flatten().fieldErrors,
     };
   }
- 
-  const { customerId, amount = 0, status } = validatedFields.data ?? {};
-  const amountInCents = amount * 100;
- 
+
+  const { customer_id, amount, status } = validated.data;
+
   try {
     await sql`
       UPDATE invoices
-      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      SET customer_id = ${customer_id}, amount = ${amount}, status = ${status}
       WHERE id = ${id}
     `;
+    revalidatePath('/dashboard/invoices');
+    redirect('/dashboard/invoices');
   } catch (error) {
-    return { message: 'Database Error: Failed to Update Invoice.' };
-  }
- 
-  revalidatePath('/dashboard/invoices');
-  redirect('/dashboard/invoices');
-}
-
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData,
-) {
-  try {
-    await signIn('credentials', formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
-      }
-    }
-    throw error;
+    console.error('Database Error:', error);
+    return { message: 'Database update failed', errors: {} };
   }
 }
