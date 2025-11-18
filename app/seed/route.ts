@@ -2,6 +2,13 @@ import bcrypt from 'bcrypt';
 import postgres from 'postgres';
 import { invoices, customers, revenue, users } from '../lib/placeholder-data';
 
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+};
+
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 async function seedUsers() {
@@ -16,7 +23,7 @@ async function seedUsers() {
   `;
 
   const insertedUsers = await Promise.all(
-    users.map(async (user) => {
+    users.map(async (user: { password: string | Buffer<ArrayBufferLike>; id: string | number | boolean | Date | Uint8Array<ArrayBufferLike> | postgres.Helper<any, any[]> | postgres.Parameter<any> | postgres.ArrayParameter<readonly any[]> | readonly postgres.SerializableParameter<never>[] | postgres.Fragment | postgres.Fragment[] | null; name: string | number | boolean | Date | Uint8Array<ArrayBufferLike> | postgres.Helper<any, any[]> | postgres.Parameter<any> | postgres.ArrayParameter<readonly any[]> | readonly postgres.SerializableParameter<never>[] | postgres.Fragment | postgres.Fragment[] | null; email: string | number | boolean | Date | Uint8Array<ArrayBufferLike> | postgres.Helper<any, any[]> | postgres.Parameter<any> | postgres.ArrayParameter<readonly any[]> | readonly postgres.SerializableParameter<never>[] | postgres.Fragment | postgres.Fragment[] | null; }) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
       return sql`
         INSERT INTO users (id, name, email, password)
@@ -44,7 +51,7 @@ async function seedInvoices() {
 
   const insertedInvoices = await Promise.all(
     invoices.map(
-      (invoice) => sql`
+      (invoice: { customer_id: string; amount: number; status: string; date: string }) => sql`
         INSERT INTO invoices (customer_id, amount, status, date)
         VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
         ON CONFLICT (id) DO NOTHING;
@@ -69,7 +76,7 @@ async function seedCustomers() {
 
   const insertedCustomers = await Promise.all(
     customers.map(
-      (customer) => sql`
+      (customer: { id: string; name: string; email: string; image_url: string }) => sql`
         INSERT INTO customers (id, name, email, image_url)
         VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
         ON CONFLICT (id) DO NOTHING;
@@ -88,9 +95,14 @@ async function seedRevenue() {
     );
   `;
 
+  type Revenue = {
+    month: string;
+    revenue: number;
+  };
+
   const insertedRevenue = await Promise.all(
     revenue.map(
-      (rev) => sql`
+      (rev: Revenue) => sql`
         INSERT INTO revenue (month, revenue)
         VALUES (${rev.month}, ${rev.revenue})
         ON CONFLICT (month) DO NOTHING;
