@@ -25,5 +25,5 @@ export default async function Page(props: { params: { id: string } }) {
     notFound();
   }
 
-  // ...render your invoice editing UI here using invoice and customers
+  // ...render invoice editing UI here using invoice and customers
 }
