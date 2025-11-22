@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
@@ -11,7 +11,7 @@ import { Button } from '@/app/ui/button';
 import { useActionState } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import { useSearchParams } from 'next/navigation';
-
+ 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -19,7 +19,7 @@ export default function LoginForm() {
     authenticate,
     undefined,
   );
-
+ 
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
@@ -79,20 +79,7 @@ export default function LoginForm() {
           {errorMessage && (
             <>
               <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
-              {typeof errorMessage === 'string' ? (
-                <p className="text-sm text-red-500">{errorMessage}</p>
-              ) : (
-                <div>
-                  <p className="text-sm text-red-500">{errorMessage.message}</p>
-                  {errorMessage.errors && Array.isArray(errorMessage.errors) && (
-                    <ul>
-                      {errorMessage.errors.map((err, idx) => (
-                        <li key={idx} className="text-xs text-red-400">{err}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+              <p className="text-sm text-red-500">{errorMessage}</p>
             </>
           )}
         </div>
